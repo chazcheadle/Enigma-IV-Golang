@@ -1,9 +1,13 @@
 package main
 
-import "fmt"
-import "strings"
-import "regexp"
-
+import (
+        "bufio"
+        "fmt"
+        "log"
+        "strings"
+        "os"
+        "regexp"
+  )
 var wheels = []*Wheel{}
 
 type Wheel struct {
@@ -44,7 +48,7 @@ func assign_wheel_offset(keyphrase string) {
   }
 }
 
-func encode_message(message string) {
+func encode_message(message string) string {
   message = strings.ToUpper(message)
   encoder_offset := 0
   encoded_text := ""
@@ -79,57 +83,99 @@ func encode_message(message string) {
       encoded_text += " "
     }
   }
-  fmt.Println(message)
-  fmt.Println(encoded_text)
+  return encoded_text
 }
 
-func decode_message(message string) {
+func decode_message(message string) string {
 
     decoded_text := ""
     decoder_offset := 0
     j := 1
-    message = "QUXFXFENCFQCCFLTSY"
+
+    // Strip non-alpha characters from messge text.
+    re := regexp.MustCompile("[^A-Z]")
+    message = re.ReplaceAllString(message, "")
+
     message = strings.ToUpper(message)
 
-      for i := 0; i < len(message); i++ {
-        decoder_offset = strings.Index(wheels[2].alphabet, string(message[i])) - wheels[2].offset
-
-        if j % 2 != 0 {
-          if decoder_offset + wheels[0].offset > len(wheels[0].alphabet) - 1 {
-            decoder_offset = decoder_offset + wheels[0].offset - len(wheels[0].alphabet)
-            decoded_text += string(wheels[0].alphabet[decoder_offset])
-          } else if decoder_offset + wheels[0].offset > 0 {
-            decoded_text += string(wheels[0].alphabet[wheels[0].offset + decoder_offset])
-          } else {
-            decoder_offset = decoder_offset + wheels[0].offset + len(wheels[0].alphabet) - 1
-            decoded_text += string(wheels[0].alphabet[decoder_offset])
-          }
+    for i := 0; i < len(message); i++ {
+      decoder_offset = strings.Index(wheels[2].alphabet, string(message[i])) - wheels[2].offset
+       if j % 2 != 0 {
+        if decoder_offset + wheels[0].offset > len(wheels[0].alphabet) - 1 {
+          decoder_offset = decoder_offset + wheels[0].offset - len(wheels[0].alphabet)
+          decoded_text += string(wheels[0].alphabet[decoder_offset])
+        } else if decoder_offset + wheels[0].offset > 0 {
+          decoded_text += string(wheels[0].alphabet[wheels[0].offset + decoder_offset])
         } else {
-          if decoder_offset + wheels[1].offset > len(wheels[1].alphabet) - 1 {
-            decoder_offset = decoder_offset + wheels[1].offset - len(wheels[1].alphabet)
-            decoded_text += string(wheels[1].alphabet[decoder_offset])
-          } else if decoder_offset + wheels[1].offset > 0 {
-            decoded_text += string(wheels[1].alphabet[wheels[1].offset + decoder_offset])
-          } else {
-            decoder_offset = decoder_offset + wheels[1].offset + len(wheels[1].alphabet) - 1
-            decoded_text += string(wheels[1].alphabet[decoder_offset])
-          }
+          decoder_offset = decoder_offset + wheels[0].offset + len(wheels[0].alphabet) - 1
+          decoded_text += string(wheels[0].alphabet[decoder_offset])
         }
-
-        j += 1
+      } else {
+        if decoder_offset + wheels[1].offset > len(wheels[1].alphabet) - 1 {
+          decoder_offset = decoder_offset + wheels[1].offset - len(wheels[1].alphabet)
+          decoded_text += string(wheels[1].alphabet[decoder_offset])
+        } else if decoder_offset + wheels[1].offset > 0 {
+          decoded_text += string(wheels[1].alphabet[wheels[1].offset + decoder_offset])
+        } else {
+          decoder_offset = decoder_offset + wheels[1].offset + len(wheels[1].alphabet) - 1
+          decoded_text += string(wheels[1].alphabet[decoder_offset])
+        }
       }
-    fmt.Println(message)
-    fmt.Println(decoded_text)
+      j += 1
+    }
+    return decoded_text
+}
+
+func getDict() []string {
+  file, err := os.Open("words.txt")
+    if err != nil {
+      log.Fatal(err)
+    }
+  
+  defer file.Close()
+  
+  var words []string
+  scanner := bufio.NewScanner(file)
+  for scanner.Scan() {
+    if len(scanner.Text()) > 2 {
+      words = append(words, strings.ToUpper(scanner.Text()))
+    }
+  }
+
+  if err := scanner.Err(); err != nil {
+    log.Fatal(err)
+  }
+
+  return words
+}
+
+func findWords(words []string, message string) {
+  
+  c := 0
+  for _, search := range words {
+    if strings.Count(message, search) > 0 { 
+      c++;
+    }
+  }
+  fmt.Println("found:",c) 
 }
 
 func main() {
 
   wheel_order := "506070"
-  keyphrase := "EMC"
-  message := "This is a test message"
+  keyphrase := "XVO"
+  message := "Call me Ishmael. Some years ago—never mind how long precisely—having little or no money in my purse, and nothing particular to interest me on shore, I thought I would sail about a little and see the watery part of the world. It is a way I have of driving off the spleen and regulating the circulation. Whenever I find myself growing grim about the mouth; whenever it is a damp, drizzly November in my soul; whenever I find myself involuntarily pausing before coffin warehouses, and bringing up the rear of every funeral I meet; and especially whenever my hypos get such an upper hand of me, that it requires a strong moral principle to prevent me from deliberately stepping into the street, and methodically knocking people's hats off—then, I account it high time to get to sea as soon as I can. This is my substitute for pistol and ball. With a philosophical flourish Cato throws himself upon his sword; I quietly take to the ship. There is nothing surprising in this. If they but knew it, almost all men in their degree, some time or other, cherish very nearly the same feelings towards the ocean with me."
+  var words []string
 
   assign_wheel_order(wheel_order)
   assign_wheel_offset(keyphrase)
-  encode_message(message)
-  decode_message(message)
+
+  encoded_text := encode_message(message)
+  fmt.Println(encoded_text)
+
+  decoded_text := decode_message(encoded_text)
+  fmt.Println(decoded_text)
+  words = getDict()
+  fmt.Println("Approx words:",len(decoded_text) / 5)
+  findWords(words, decoded_text)
 }
