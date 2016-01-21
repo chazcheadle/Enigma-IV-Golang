@@ -52,7 +52,7 @@ func encode_message(message string) {
   // Strip non-alpha characters from messge text.
   re := regexp.MustCompile("[^A-Z]")
   message = re.ReplaceAllString(message, "")
-  
+
   for i := 0; i < len(message); i++ {
     // Alternate encoding wheel.
     if i % 2 == 0 {
@@ -85,13 +85,51 @@ func encode_message(message string) {
 
 func decode_message(message string) {
 
+    decoded_text := ""
+    decoder_offset := 0
+    j := 1
+    message = "QUXFXFENCFQCCFLTSY"
+    message = strings.ToUpper(message)
+
+      for i := 0; i < len(message); i++ {
+        decoder_offset = strings.Index(wheels[2].alphabet, string(message[i])) - wheels[2].offset
+
+        if j % 2 != 0 {
+          if decoder_offset + wheels[0].offset > len(wheels[0].alphabet) - 1 {
+            decoder_offset = decoder_offset + wheels[0].offset - len(wheels[0].alphabet)
+            decoded_text += string(wheels[0].alphabet[decoder_offset])
+          } else if decoder_offset + wheels[0].offset > 0 {
+            decoded_text += string(wheels[0].alphabet[wheels[0].offset + decoder_offset])
+          } else {
+            decoder_offset = decoder_offset + wheels[0].offset + len(wheels[0].alphabet) - 1
+            decoded_text += string(wheels[0].alphabet[decoder_offset])
+          }
+        } else {
+          if decoder_offset + wheels[1].offset > len(wheels[1].alphabet) - 1 {
+            decoder_offset = decoder_offset + wheels[1].offset - len(wheels[1].alphabet)
+            decoded_text += string(wheels[1].alphabet[decoder_offset])
+          } else if decoder_offset + wheels[1].offset > 0 {
+            decoded_text += string(wheels[1].alphabet[wheels[1].offset + decoder_offset])
+          } else {
+            decoder_offset = decoder_offset + wheels[1].offset + len(wheels[1].alphabet) - 1
+            decoded_text += string(wheels[1].alphabet[decoder_offset])
+          }
+        }
+
+        j += 1
+      }
+    fmt.Println(message)
+    fmt.Println(decoded_text)
 }
 
 func main() {
+
   wheel_order := "506070"
-  keyphrase := "DFM"
+  keyphrase := "EMC"
   message := "This is a test message"
+
   assign_wheel_order(wheel_order)
   assign_wheel_offset(keyphrase)
   encode_message(message)
+  decode_message(message)
 }
