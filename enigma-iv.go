@@ -149,7 +149,7 @@ func getDict() []string {
   return words
 }
 
-func findWords(words []string, message string) {
+func findWords(words []string, message string) bool {
   
   c := 0
   for _, search := range words {
@@ -157,7 +157,11 @@ func findWords(words []string, message string) {
       c++;
     }
   }
-  fmt.Println("found:",c) 
+  fmt.Println("found:",c)
+  if len(message) / 5 < c {
+    return true
+  }
+  return false
 }
 
 func main() {
@@ -171,11 +175,15 @@ func main() {
   assign_wheel_offset(keyphrase)
 
   encoded_text := encode_message(message)
-  fmt.Println(encoded_text)
+//  fmt.Println(encoded_text)
+
+  keyphrase = "XVO"
+  assign_wheel_offset(keyphrase)
 
   decoded_text := decode_message(encoded_text)
-  fmt.Println(decoded_text)
+//  fmt.Println(decoded_text)
   words = getDict()
   fmt.Println("Approx words:",len(decoded_text) / 5)
-  findWords(words, decoded_text)
+
+  fmt.Println(findWords(words, decoded_text))
 }
