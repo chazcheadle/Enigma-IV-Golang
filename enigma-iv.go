@@ -1,9 +1,7 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
@@ -39,41 +37,6 @@ func NewMachine(wheelOrder []string, keyphrase string) *Machine {
 		}
 	}
 	return &Machine{wheelOrder, keyphrase, wheels}
-}
-
-// Open a dictionary file and return it as an array of strings.
-func getDict() []string {
-	file, err := os.Open("words.txt")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer file.Close()
-
-	var words []string
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		if len(scanner.Text()) > 2 {
-			words = append(words, strings.ToUpper(scanner.Text()))
-		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
-	}
-
-	return words
-}
-
-// Return an very rough estimate of matched words in the message.
-func findWords(words []string, message string) int {
-	c := 0
-	for _, search := range words {
-		if strings.Count(message, search) > 0 {
-			c++
-		}
-	}
-	return c
 }
 
 // Return the a wheel alphabet,true or false.
@@ -116,12 +79,15 @@ func main() {
 	var words []string
 	words = getDict()
 
+	// Create a new machine.
 	machine := *NewMachine(wheelOrder, keyphrase)
+
 	encodedText := machine.encodeMessage(message)
 	fmt.Println(encodedText)
+
 	decodedText := machine.decodeMessage(encodedText)
 	fmt.Println(decodedText)
 
-	fmt.Println("found:", findWords(words, decodedText))
+	fmt.Println("Found approximately: ", findWords(words, decodedText))
 
 }
